@@ -1,0 +1,3 @@
+.MathOCR-install-*/
+install-mathocr.ps1
+*.log
