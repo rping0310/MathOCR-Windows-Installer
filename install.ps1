@@ -44,18 +44,25 @@ function Install-WithWinget {
 function Find-Python311 {
     $py = Get-Command py.exe -ErrorAction SilentlyContinue
     if ($py) {
-        & $py.Source -3.11 -c "import sys; assert sys.version_info[:2] == (3, 11)" 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            return @{ Command = $py.Source; Prefix = @("-3.11") }
+        try {
+            & $py.Source -3.11 -c "import sys; assert sys.version_info[:2] == (3, 11)" *> $null
+            if ($LASTEXITCODE -eq 0) {
+                return @{ Command = $py.Source; Prefix = @("-3.11") }
+            }
         }
+        catch {}
     }
 
     $python = Get-Command python.exe -ErrorAction SilentlyContinue
-    if ($python) {
-        & $python.Source -c "import sys; assert sys.version_info[:2] == (3, 11)" 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            return @{ Command = $python.Source; Prefix = @() }
+    $isStoreAlias = $python -and $python.Source -like "*\Microsoft\WindowsApps\python.exe"
+    if ($python -and -not $isStoreAlias) {
+        try {
+            & $python.Source -c "import sys; assert sys.version_info[:2] == (3, 11)" *> $null
+            if ($LASTEXITCODE -eq 0) {
+                return @{ Command = $python.Source; Prefix = @() }
+            }
         }
+        catch {}
     }
     return $null
 }
@@ -209,3 +216,4 @@ finally {
         Remove-Item -LiteralPath $workRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
+
